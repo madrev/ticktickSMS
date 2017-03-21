@@ -16,6 +16,14 @@ SLACK_WEBHOOK_SECRET = os.environ.get('SLACK_INCOMING_TOKEN', None)
 TWILIO_NUMBER = os.environ.get('TWILIO_NUMBER', None)
 USER_NUMBER = os.environ.get('USER_NUMBER', None)
 
+timers = {
+"counter": 0
+}
+
+
+def log_timer(timer):
+    timers[timers["counter"]] = timer
+    timers["counter"] += 1
 
 
 def get_recipient_id(channel_id):
@@ -36,7 +44,7 @@ def send_sms(phone, message):
     twilio_client.messages.create(to=phone, from_=TWILIO_NUMBER,
                                   body=message)
 
-def build_success_response(time, message):
+def build_success_response(time, message, timer_id):
     resp = {
         "response_type": "in_channel",
         "text": f"Your message will be sent in {time} minutes.",
@@ -45,7 +53,7 @@ def build_success_response(time, message):
         "text": message
         },
         {
-        "callback_id": "cancel",
+        "callback_id": timer_id,
         "fallback": "Sorry, your browser doesn't support canceling this action.",
         "actions": [
             {
@@ -67,6 +75,13 @@ def build_failure_response():
     }
     return json.dumps(resp)
 
+def build_cancel_response():
+    resp = {
+    "replace_original": True,
+    "text": "Your message has been canceled."
+    }
+    return json.dumps(resp)
+
 @app.route('/twilio', methods=['POST'])
 def twilio_post():
     response = twiml.Response()
@@ -79,8 +94,6 @@ def twilio_post():
 @app.route('/slack', methods=['POST'])
 def slack_post():
     if request.form['token'] == SLACK_WEBHOOK_SECRET:
-
-        pprint.pprint(request.form)
         channel_id = request.form['channel_id']
         recipient_phone = get_user_phone(get_recipient_id(channel_id))
         username = request.form['user_name']
@@ -89,16 +102,23 @@ def slack_post():
 
         if recipient_phone != None:
             timer = scheduler.schedule_message(1, recipient_phone, response_message)
-            response_text = build_success_response(1, text)
-            print(timer)
+            log_timer(timer)
+            print(timers)
+            timer_id = timers["counter"] - 1
+            response_text = build_success_response(1, text, timer_id)
+
         else:
             response_text = build_failure_response()
     return Response(response_text, mimetype="application/json"), 200
 
 @app.route('/slack/button', methods=['POST'])
 def handle_button():
-    pprint.pprint(request.form)
-    return Response(), 200
+    payload = json.loads(request.form['payload'])
+    timer_id = int(payload['callback_id'])
+    timer = timers[timer_id]
+    scheduler.cancel_message(timer)
+    response_text = build_cancel_response()
+    return Response(response_text, mimetype="application/json"), 200
 
 
 
