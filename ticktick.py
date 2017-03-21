@@ -1,4 +1,5 @@
 import os
+import scheduler
 from flask import Flask, request, Response
 from slackclient import SlackClient
 from twilio import twiml
@@ -28,6 +29,10 @@ def get_user_phone(user_id):
         return user_call['user']['profile']['phone']
     return None
 
+def send_sms(phone, message):
+    twilio_client.messages.create(to=phone, from_=TWILIO_NUMBER,
+                                  body=message)
+
 @app.route('/twilio', methods=['POST'])
 def twilio_post():
     response = twiml.Response()
@@ -47,8 +52,8 @@ def slack_post():
         text = request.form['text']
         response_message = username + " says: " + text
         if recipient_phone != None:
-            twilio_client.messages.create(to=recipient_phone, from_=TWILIO_NUMBER,
-                                          body=response_message)
+            event = scheduler.schedule_message(1, recipient_phone, response_message)
+            print(event)
         else:
             # TODO: tell the user the message isn't happening
             print("No text sent")
