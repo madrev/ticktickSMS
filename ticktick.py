@@ -1,5 +1,6 @@
 import os
 import scheduler
+import json
 from flask import Flask, request, Response
 from slackclient import SlackClient
 from twilio import twiml
@@ -33,6 +34,25 @@ def send_sms(phone, message):
     twilio_client.messages.create(to=phone, from_=TWILIO_NUMBER,
                                   body=message)
 
+def build_sucess_response(time, message):
+    resp = {
+        "response_type": "in_channel",
+        "text": f"Your message will be sent in {time} minutes.",
+        "attachments": [
+        {
+        "text": message
+        }
+        ]
+    }
+    return json.dumps(resp)
+
+def build_failure_response():
+    resp = {
+    "response_type": "ephemeral",
+    "text": "Sorry, your recipient does not have a phone number listed."
+    }
+    return json.dumps(resp)
+
 @app.route('/twilio', methods=['POST'])
 def twilio_post():
     response = twiml.Response()
@@ -45,19 +65,21 @@ def twilio_post():
 @app.route('/slack', methods=['POST'])
 def slack_post():
     if request.form['token'] == SLACK_WEBHOOK_SECRET:
+
         print(request.form)
         channel_id = request.form['channel_id']
         recipient_phone = get_user_phone(get_recipient_id(channel_id))
         username = request.form['user_name']
         text = request.form['text']
         response_message = username + " says: " + text
+
         if recipient_phone != None:
-            event = scheduler.schedule_message(1, recipient_phone, response_message)
-            print(event)
+            timer = scheduler.schedule_message(1, recipient_phone, response_message)
+            response_text = build_json_response(1, text)
+            print(timer)
         else:
-            # TODO: tell the user the message isn't happening
-            print("No text sent")
-    return Response(), 200
+            response_text = build_failure_response()
+    return Response(response_text, mimetype="application/json"), 200
 
 
 if __name__ == '__main__':
