@@ -1,6 +1,7 @@
 import os
 import scheduler
 import json
+import pprint
 from flask import Flask, request, Response
 from slackclient import SlackClient
 from twilio import twiml
@@ -14,6 +15,7 @@ slack_client = SlackClient(os.environ.get('SLACK_TOKEN', None))
 SLACK_WEBHOOK_SECRET = os.environ.get('SLACK_INCOMING_TOKEN', None)
 TWILIO_NUMBER = os.environ.get('TWILIO_NUMBER', None)
 USER_NUMBER = os.environ.get('USER_NUMBER', None)
+
 
 
 def get_recipient_id(channel_id):
@@ -34,14 +36,26 @@ def send_sms(phone, message):
     twilio_client.messages.create(to=phone, from_=TWILIO_NUMBER,
                                   body=message)
 
-def build_sucess_response(time, message):
+def build_success_response(time, message):
     resp = {
         "response_type": "in_channel",
         "text": f"Your message will be sent in {time} minutes.",
         "attachments": [
         {
         "text": message
-        }
+        },
+        {
+        "callback_id": "cancel",
+        "fallback": "Sorry, your browser doesn't support canceling this action.",
+        "actions": [
+            {
+            "name":"cancel",
+            "text":"Cancel this SMS",
+            "style":"danger",
+            "type":"button"
+            }
+        ]
+            }
         ]
     }
     return json.dumps(resp)
@@ -66,7 +80,7 @@ def twilio_post():
 def slack_post():
     if request.form['token'] == SLACK_WEBHOOK_SECRET:
 
-        print(request.form)
+        pprint.pprint(request.form)
         channel_id = request.form['channel_id']
         recipient_phone = get_user_phone(get_recipient_id(channel_id))
         username = request.form['user_name']
@@ -75,11 +89,17 @@ def slack_post():
 
         if recipient_phone != None:
             timer = scheduler.schedule_message(1, recipient_phone, response_message)
-            response_text = build_json_response(1, text)
+            response_text = build_success_response(1, text)
             print(timer)
         else:
             response_text = build_failure_response()
     return Response(response_text, mimetype="application/json"), 200
+
+@app.route('/slack/button', methods=['POST'])
+def handle_button():
+    pprint.pprint(request.form)
+    return Response(), 200
+
 
 
 if __name__ == '__main__':
