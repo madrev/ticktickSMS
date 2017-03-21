@@ -34,7 +34,7 @@ def twilio_post():
     message = request.form['Body']
     slack_client.api_call("chat.postMessage", channel="#ticktick",
                           text=message, username='ticktick',
-                          icon_emoji=':robot_face:', reply_broadcast="true")
+                          icon_emoji=':robot_face:')
     return Response(response.toxml(), mimetype="text/xml"), 200
 
 @app.route('/slack', methods=['POST'])
