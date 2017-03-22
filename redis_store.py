@@ -12,4 +12,4 @@ def retrieve_message(id):
     return pickle.loads(db.hget("messages", id))
 
 def delete_message(id):
-    return db.hdel("messages", id)
+    db.hdel("messages", id)

@@ -3,6 +3,7 @@ import json
 
 from response_builder import build_success_response, build_failure_response, build_cancel_response
 from message import Message
+from redis_store import delete_message
 from flask import Flask, request, Response
 from slackclient import SlackClient
 from twilio import twiml
@@ -23,6 +24,14 @@ timers = {}
 def log_timer(message_id, timer):
     timers[message_id] = timer
 
+def parse_command(command):
+    words = command.split(" ")
+    if words[0].isdigit():
+        min_delay = int(words[0])
+        del words[0]
+        return (min_delay, " ".join(words))
+    else:
+        return (5, command)
 
 
 def get_recipient_id(channel_id):
@@ -61,13 +70,15 @@ def slack_post():
 
             response_url = request.form['response_url']
             username = request.form['user_name']
-            text = request.form['text']
+            command = request.form['text']
+            parsed = parse_command(command)
+            min_delay = parsed[0]
+            text = parsed[1]
             response_message = username + " says: " + text
-            msg = Message(recipient_phone, text, 1, response_url)
+            msg = Message(recipient_phone, text, min_delay, response_url)
             timer = msg.start_timer()
-            # save_message(msg)
             log_timer(msg.id, timer)
-            response_text = build_success_response(1, text, msg.id)
+            response_text = build_success_response(min_delay, text, msg.id)
 
         else:
             response_text = build_failure_response()
@@ -76,9 +87,9 @@ def slack_post():
 @app.route('/slack/button', methods=['POST'])
 def handle_button():
     payload = json.loads(request.form['payload'])
-    message_id = int(payload['callback_id'])
+    message_id = payload['callback_id']
     timers[message_id].cancel()
-    # delete_message(message_id)
+    delete_message(message_id)
     response_text = build_cancel_response()
     return Response(response_text, mimetype="application/json"), 200
 

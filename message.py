@@ -20,7 +20,7 @@ class Message:
     def __init__(self, to_number, text, min_delay, response_url):
         self.to_number = to_number
         self.text = text
-        self.id = int(uuid.uuid4())
+        self.id = str(uuid.uuid4())
         self.min_delay = min_delay
         self.response_url = response_url
 
@@ -31,11 +31,8 @@ class Message:
         save_message(self)
         return timer
 
-    def cancel(self):
-        self.timer.cancel()
-        delete_message(self)
 
     def send(self):
         send_sms(self.to_number, self.text)
         r = requests.post(self.response_url, data=build_sent_notif())
-        delete_message(self)
+        delete_message(self.id)

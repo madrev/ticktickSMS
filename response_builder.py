@@ -10,7 +10,7 @@ def build_success_response(time, message, timer_id):
         "fallback": "Sorry, we can't display the text here."
         },
         {
-        "callback_id": str(timer_id),
+        "callback_id": timer_id,
         "fallback": "Sorry, your browser doesn't support canceling this action.",
         "actions": [
             {
