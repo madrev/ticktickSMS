@@ -5,6 +5,7 @@ import uuid
 import threading
 import requests
 from response_builder import build_sent_notif
+from redis_store import save_message, delete_message
 
 twilio_client = TwilioRestClient()
 TWILIO_NUMBER = os.environ.get('TWILIO_NUMBER', None)
@@ -25,13 +26,16 @@ class Message:
 
 
     def start_timer(self):
-        self.timer = threading.Timer(self.min_delay*60, self.send)
-        self.timer.start()
-        return self.timer
+        timer = threading.Timer(self.min_delay*60, self.send)
+        timer.start()
+        save_message(self)
+        return timer
 
     def cancel(self):
         self.timer.cancel()
+        delete_message(self)
 
     def send(self):
         send_sms(self.to_number, self.text)
         r = requests.post(self.response_url, data=build_sent_notif())
+        delete_message(self)

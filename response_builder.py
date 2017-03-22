@@ -6,10 +6,11 @@ def build_success_response(time, message, timer_id):
         "text": f"Your message will be sent in {time} minutes.",
         "attachments": [
         {
-        "text": message
+        "text": message,
+        "fallback": "Sorry, we can't display the text here."
         },
         {
-        "callback_id": timer_id,
+        "callback_id": str(timer_id),
         "fallback": "Sorry, your browser doesn't support canceling this action.",
         "actions": [
             {
