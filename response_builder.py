@@ -37,3 +37,10 @@ def build_cancel_response():
     "text": "Your message has been canceled."
     }
     return json.dumps(resp)
+
+def build_sent_notif():
+    resp = {
+    "replace_original": True,
+    "text": "Your message has been sent."
+    }
+    return json.dumps(resp)
