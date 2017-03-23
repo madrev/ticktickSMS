@@ -33,6 +33,7 @@ class Message:
 
 
     def send(self):
-        send_sms(self.to_number, self.text)
+        annotated_text = self.text + "\n\nReply to this message and it will be forwarded to Slack."
+        send_sms(self.to_number, annotated_text)
         r = requests.post(self.response_url, data=build_sent_notif())
         delete_message(self.id)

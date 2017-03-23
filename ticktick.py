@@ -3,7 +3,8 @@ import json
 
 from response_builder import build_success_response, build_failure_response, build_cancel_response
 from message import Message
-from redis_store import delete_message
+from recipient import Recipient
+from redis_store import delete_message, get_username, get_channel_id
 from flask import Flask, request, Response
 from slackclient import SlackClient
 from twilio import twiml
@@ -53,9 +54,13 @@ def get_user_phone(user_id):
 @app.route('/twilio', methods=['POST'])
 def twilio_post():
     response = twiml.Response()
-    message = request.form['Body']
-    slack_client.api_call("chat.postMessage", channel="#ticktick",
-                          text=message, username='ticktick',
+    print(request.form)
+    from_number = request.form['From']
+    channel_id = get_channel_id(from_number)
+    username = "@" + get_username(from_number)
+    message = f"{username} replied via SMS: {request.form['Body']}"
+    slack_client.api_call("chat.postMessage", channel=channel_id, as_user="false",
+                          text=message, username='ticktickSMS',
                           icon_emoji=':robot_face:')
     return Response(response.toxml(), mimetype="text/xml"), 200
 
@@ -70,15 +75,20 @@ def slack_post():
 
             response_url = request.form['response_url']
             username = request.form['user_name']
+
             command = request.form['text']
             parsed = parse_command(command)
             min_delay = parsed[0]
             text = parsed[1]
-            response_message = username + " says: " + text
-            msg = Message(recipient_phone, text, min_delay, response_url)
+            sms_message = username + " says: " + text
+
+            msg = Message(recipient_phone, sms_message, min_delay, response_url)
             timer = msg.start_timer()
             log_timer(msg.id, timer)
             response_text = build_success_response(min_delay, text, msg.id)
+
+            recipient = Recipient(recipient_phone, username, channel_id, recipient_id)
+            recipient.save()
 
         else:
             response_text = build_failure_response()
