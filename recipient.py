@@ -2,10 +2,16 @@ from redis_store import save_recipient
 
 def format_phone(phone):
     if phone.find("+") == -1:
-        if phone[0] != "1":
-            return "+1" + phone
-        else:
-            return "+" + phone
+        res = "+1"
+        for i in range(0, len(phone)):
+            char = phone[i]
+            if i == 0 and char == "1":
+                continue
+            elif char.isdigit():
+                res += char
+            else:
+                continue
+        return res
     else:
         return phone
 

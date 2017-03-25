@@ -54,11 +54,11 @@ def get_user_phone(user_id):
 @app.route('/twilio', methods=['POST'])
 def twilio_post():
     response = twiml.Response()
-    print(request.form)
     from_number = request.form['From']
     channel_id = get_channel_id(from_number)
     username = "@" + get_username(from_number)
     message = f"{username} replied via SMS: {request.form['Body']}"
+    
     slack_client.api_call("chat.postMessage", channel=channel_id, as_user="false",
                           text=message, username='ticktickSMS',
                           icon_emoji=':robot_face:')
