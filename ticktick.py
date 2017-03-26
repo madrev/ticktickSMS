@@ -1,7 +1,7 @@
 import os
 import json
 
-from response_builder import build_success_response, build_failure_response, build_cancel_response
+from response_builder import build_success_response, build_failure_response, build_cancel_response, build_sms_notif
 from message import Message
 from recipient import Recipient
 from redis_store import delete_message, get_username, get_channel_id
@@ -56,12 +56,10 @@ def twilio_post():
     response = twiml.Response()
     from_number = request.form['From']
     channel_id = get_channel_id(from_number)
-    username = "@" + get_username(from_number)
-    message = f"{username} replied via SMS: {request.form['Body']}"
-
+    username = get_username(from_number)
     slack_client.api_call("chat.postMessage", channel=channel_id, as_user="false",
-                          text=message, username='ticktickSMS',
-                          icon_emoji=':robot_face:')
+                          username="ticktickSMS", icon_url="https://res.cloudinary.com/askagram/image/upload/v1490491401/stopwatch_znpm1x.png",
+                          attachments=build_sms_notif(username, request.form['Body']))
     return Response(response.toxml(), mimetype="text/xml"), 200
 
 @app.route('/slack', methods=['POST'])

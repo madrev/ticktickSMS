@@ -34,8 +34,9 @@ def build_failure_response():
     return json.dumps(resp)
 
 def build_cancel_response(sent = True):
-    text = "Your message has been canceled" if sent == True else "Sorry, this message has already been sent."
+    text = "Your message has been canceled." if sent == True else "Sorry, this message has already been sent."
     resp = {
+    "response_type": "in_channel",
     "replace_original": "true",
     "text": text
     }
@@ -43,7 +44,16 @@ def build_cancel_response(sent = True):
 
 def build_sent_notif():
     resp = {
+    "response_type": "in_channel",
     "replace_original": "true",
     "text": "Your message has been sent."
     }
+    return json.dumps(resp)
+
+def build_sms_notif(username, text):
+    name = "@" + username
+    resp = [{
+    "pretext": f"{name} replied via SMS:",
+    "text": text
+    }]
     return json.dumps(resp)
