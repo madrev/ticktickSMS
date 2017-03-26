@@ -58,7 +58,7 @@ def twilio_post():
     channel_id = get_channel_id(from_number)
     username = "@" + get_username(from_number)
     message = f"{username} replied via SMS: {request.form['Body']}"
-    
+
     slack_client.api_call("chat.postMessage", channel=channel_id, as_user="false",
                           text=message, username='ticktickSMS',
                           icon_emoji=':robot_face:')
@@ -98,9 +98,12 @@ def slack_post():
 def handle_button():
     payload = json.loads(request.form['payload'])
     message_id = payload['callback_id']
-    timers[message_id].cancel()
-    delete_message(message_id)
-    response_text = build_cancel_response()
+    if timers[message_id].is_alive():
+        timers[message_id].cancel()
+        response_text = build_cancel_response(True)
+        delete_message(message_id)
+    else:
+        response_text = build_cancel_response(False)
     return Response(response_text, mimetype="application/json"), 200
 
 

@@ -1,9 +1,10 @@
 import json
 
 def build_success_response(time, message, timer_id):
+    unit = "minute" if int(time) == 1 else "minutes"
     resp = {
         "response_type": "in_channel",
-        "text": f"Your message will be sent in {time} minutes.",
+        "text": f"Your message will be sent in {time} {unit}.",
         "attachments": [
         {
         "text": message,
@@ -32,16 +33,17 @@ def build_failure_response():
     }
     return json.dumps(resp)
 
-def build_cancel_response():
+def build_cancel_response(sent = True):
+    text = "Your message has been canceled" if sent == True else "Sorry, this message has already been sent."
     resp = {
-    "replace_original": True,
-    "text": "Your message has been canceled."
+    "replace_original": "true",
+    "text": text
     }
     return json.dumps(resp)
 
 def build_sent_notif():
     resp = {
-    "replace_original": True,
+    "replace_original": "true",
     "text": "Your message has been sent."
     }
     return json.dumps(resp)
