@@ -15,3 +15,8 @@ ticktickSMS is written in Python 3.6 using the Flask microframework. It is in th
 ## Soon to come
 * OAuth 2.0 token exchange and permissions (for distribution in Slack app directory)
 * Auto-recovery of active messages from Redis store
+* Automatic cancellation of messages when recipient replies in the Slack channel
+* Support for multiple recipients per message (currently only works with Slack DMs)
+
+## Contact me
+If you have questions or problems with this repo, raise an issue! If you want to talk -- especially about that awesome software engineering gig you're hiring for -- drop me a line at maddierevill (at) gmail.
