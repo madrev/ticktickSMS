@@ -71,14 +71,10 @@ def slack_post():
 
         if recipient_phone != None:
 
-            response_url = request.form['response_url']
-            username = request.form['user_name']
+            response_url, username, command = [request.form[k] for k in ('response_url','user_name', 'text')]
 
-            command = request.form['text']
-            parsed = parse_command(command)
-            min_delay = parsed[0]
-            text = parsed[1]
-            sms_message = username + " says: " + text
+            min_delay, text = parse_command(command)
+            sms_message = "@" + username + " says: " + text
 
             msg = Message(recipient_phone, sms_message, min_delay, response_url)
             timer = msg.start_timer()
