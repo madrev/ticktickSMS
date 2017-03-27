@@ -23,6 +23,11 @@ virtualenv ticktick
 source ticktick/bin/activate
 ```
 
+Then install the required modules:
+```
+pip install -r requirements.txt
+```
+
 #### Set your environment variables
 
 Here's the tedious part. ticktickSMS needs a bunch of information from Slack and Twilio to work. Run the following at the command line, substituting your credentials. If you need help finding them, check out [this great blog post from Twilio](https://www.twilio.com/blog/2016/05/build-sms-slack-bot-python.html).

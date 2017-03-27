@@ -1,6 +1,6 @@
 # ticktickSMS
 
-You know that one guy on your Slack team who never responds to messages? **ticktickSMS** is a Slack app that lets you bother him better.
+You know that one guy on your Slack team who never responds to messages? That guy kinda sucks. **ticktickSMS** is a Slack app that lets you bother him better.
 
 ticktickSMS utilizes the Twilio API to send SMS messages to your recipient's phone number (as retrieved from your Slack team's user directory) on a specified timeout. These messages are cancellable using a button visible both to the sender and receiver.
 
